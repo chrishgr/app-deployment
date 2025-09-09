@@ -1,0 +1,12 @@
+[project]
+name = "streamlit-app"
+version = "0.1.0"
+description = "Streamlit-app med filtrering og nedlasting"
+readme = "README.md"
+requires-python = ">=3.9"
+
+dependencies = [
+    "streamlit",
+    "pandas",
+    "openpyxl",
+]
