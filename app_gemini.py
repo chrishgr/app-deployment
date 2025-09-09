@@ -193,3 +193,52 @@ if sel and sel.cells:
 
 # --- Lagre filtrert DataFrame
 
+st.markdown("---")
+st.subheader("💾 Last ned filtrert utvalg")
+
+
+# --- Standard filnavn basert på input ---
+default_stem = Path(file_path).stem + "_filtered"
+
+# --- Velg format (skjul Excel hvis openpyxl ikke er installert) ---
+format_options = ["Pickle (.pkl)", "Excel (.xlsx)", "CSV (.csv)"]
+
+format_valg = st.radio(
+    "Velg filformat:",
+    options=format_options,
+    index=0,
+    key="out_file_format"
+)
+
+# --- Foreslå filnavn ut fra valgt format ---
+ext = ".pkl" if format_valg.startswith("Pickle") else (".xlsx" if format_valg.startswith("Excel") else ".csv")
+out_name = st.text_input("Filnavn for nedlasting", value=f"{default_stem}{ext}", key="download_filename")
+
+# --- Hjelper: bygg bytes + MIME “on the fly” ---
+def df_to_bytes_and_mime(df: pd.DataFrame, fmt: str):
+    buf = BytesIO()
+    if fmt.startswith("Pickle"):
+        df.to_pickle(buf)
+        mime = "application/octet-stream"
+    elif fmt.startswith("Excel"):
+        # openpyxl er allerede sjekket
+        with pd.ExcelWriter(buf, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False)
+        mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    else:  # CSV
+        # Bruk UTF-8-SIG for bedre kompatibilitet med Excel norsk Windows
+        csv_str = df.to_csv(index=False, encoding="utf-8-sig")
+        buf.write(csv_str.encode("utf-8-sig"))
+        mime = "text/csv"
+    buf.seek(0)
+    return buf, mime
+
+# --- Last ned i ett klikk: data genereres når knappen trykkes ---
+buffer, mime = df_to_bytes_and_mime(df_final, format_valg)
+st.download_button(
+    label=f"⬇️ Last ned {out_name}",
+    data=buffer,
+    file_name=out_name,
+    mime=mime,
+    key="download_btn"
+)
