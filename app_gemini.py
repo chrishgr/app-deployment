@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from pathlib import Path
+from io import BytesIO
 from data_utils import load_df, get_unique_values  # all databehandling i egen modul
 
 # --- Side-konfigurasjon ---
@@ -190,24 +191,5 @@ if sel and sel.cells:
         lines = [f"**{col}:**\n{val}" for col, val in row.items()]
         st.markdown("\n\n".join(lines))
 
-# --- Lagre filtrert DataFrame til pickle ---
-st.markdown("---")
-st.subheader("💾 Lagre filtrert utvalg")
+# --- Lagre filtrert DataFrame
 
-# Foreslå standard filnavn basert på inputfilen
-default_out = str(Path(file_path).with_name(Path(file_path).stem + "_filtered.pkl"))
-
-out_path = st.text_input(
-    "Filnavn for ny pickle-fil (.pkl)",
-    value=default_out,
-    help="DataFrame lagres med pandas.DataFrame.to_pickle()",
-    key="out_pickle_path",
-)
-
-if st.button("Skriv filtrert DataFrame til pickle", key="write_pickle_btn"):
-    try:
-        Path(out_path).parent.mkdir(parents=True, exist_ok=True)
-        df_final.to_pickle(out_path)
-        st.success(f"Skrev {len(df_final):,} rader til «{out_path}».")
-    except Exception as e:
-        st.error(f"Klarte ikke å skrive til pickle: {e}")
